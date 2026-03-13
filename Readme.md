@@ -25,4 +25,4 @@ Traditional AMR detection requires sequencing (base-calling), assembly/alignment
 5.  **Validation:** Testing against base-called ground truth and clinical susceptibility labels.
 
 ---
-*Note: This project is part of the 425282 - Deep Learning course (MSc).*
+*Note: This project is part of the 425282 - Deep Learning course (MSc). FCUL*

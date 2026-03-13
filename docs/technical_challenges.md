@@ -28,4 +28,4 @@ Nanopore reads can be very long (kilobases to megabases).
 *   **The Solution:** Use **sliding window** techniques. Most researchers use the first 2000–4000 signal points (approx. 250–500 bases) to make the initial classification.
 
 ---
-*Professor's Note:* Do not underestimate the difficulty of **Signal-to-Sequence mapping**. You will need base-called labels to identify which sections of the squiggle correspond to which AMR genes for your training set.
+*Note:* We should not underestimate the difficulty of **Signal-to-Sequence mapping**. We will need base-called labels to identify which sections of the squiggle correspond to which AMR genes for your training set.
