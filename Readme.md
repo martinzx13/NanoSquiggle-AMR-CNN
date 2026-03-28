@@ -8,13 +8,25 @@ Traditional AMR detection requires sequencing (base-calling), assembly/alignment
 
 ## Directory Structure
 ```text
-/project
-├── Readme.md           <- Project overview and roadmap
-├── data/               <- Raw and processed Nanopore signal data (.fast5, .pod5)
-├── docs/               <- Research summaries, literature reviews, and links
-│   └── resources.md    <- Key papers, datasets, and technical tools
-├── notebooks/          <- Experimental analysis and prototyping
-└── src/                <- Production-ready source code (1D-CNN implementation)
+   /NanoSquiggle-AMR-CNN
+   ├── configs/            # Hyperparameters (YAML/JSON). no code Python.
+   ├── data/               # Local data storage (ignored by git).
+   │   ├── raw/            # .fast5 or .pod5 files.
+   │   └── processed/      # Normalized tensors or windowed segments.
+   ├── docs/               # Technical specs and literature summaries.
+   ├── notebooks/          # Exploratory Data Analysis (EDA) and signal plotting.
+   ├── scripts/            # Execution entry points.
+   │   ├── train.py        # Main training script.
+   │   ├── evaluate.py     # Rigorous testing on unseen datasets.
+   │   └── preprocess.py   # Signal cleaning and MAD normalization.
+   ├── src/                # The Core Engine (The "Library")
+   │   ├── data/           # PyTorch Dataset and DataLoader classes.
+   │   ├── models/         # Modular architecture definitions (1D-CNN, ResNet).
+   │   └── utils/          # Normalization, windowing, and logging utilities.
+   ├── tests/              # Unit tests for model shapes and data loading logic.
+   ├── .gitignore          # Crucial: Exclude /data, .fast5, and /env.
+   ├── requirements.txt    # Dependency list (torch, ont-fast5-api, etc.).
+   └── README.md           # The Scientific Abstract and usage guide.
 ```
 
 ## Methodology (The Roadmap)
