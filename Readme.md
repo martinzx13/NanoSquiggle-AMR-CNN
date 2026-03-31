@@ -11,19 +11,18 @@ Traditional AMR detection requires sequencing (base-calling), assembly/alignment
    /NanoSquiggle-AMR-CNN
    ├── configs/            # Hyperparameters (YAML/JSON). no code Python.
    ├── data/               # Local data storage (ignored by git).
-   │   ├── raw/            # .fast5 or .pod5 files.
+   │   ├── raw/            # .pod5 files (Primary format).
    │   └── processed/      # Normalized tensors or windowed segments.
    ├── docs/               # Technical specs and literature summaries.
    ├── notebooks/          # Exploratory Data Analysis (EDA) and signal plotting.
    ├── scripts/            # Execution entry points.
    │   ├── train.py        # Main training script.
    │   ├── evaluate.py     # Rigorous testing on unseen datasets.
-   │   └── preprocess.py   # Signal cleaning and MAD normalization.
+   │   └── preprocess.py   # Signal cleaning and MAD normalization (POD5 compatible).
    ├── src/                # The Core Engine (The "Library")
-   │   ├── data/           # PyTorch Dataset and DataLoader classes.
+   │   ├── data/           # POD5 Dataset and DataLoader classes.
    │   ├── models/         # Modular architecture definitions (1D-CNN, ResNet).
-   │   └── utils/          # Normalization, windowing, and logging utilities.
-   ├── tests/              # Unit tests for model shapes and data loading logic.
+   │   └── utils/          # Normalization, windowing, and logging utilities.   ├── tests/              # Unit tests for model shapes and data loading logic.
    ├── .gitignore          # Crucial: Exclude /data, .fast5, and /env.
    ├── requirements.txt    # Dependency list (torch, ont-fast5-api, etc.).
    └── README.md           # The Scientific Abstract and usage guide.
