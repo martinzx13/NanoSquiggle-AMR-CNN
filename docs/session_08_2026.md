@@ -22,7 +22,7 @@ To make this "feasible," we will employ a hybrid architecture.
 - **Labeling Strategy:** Adopted the NanoResFormer (PMC12957220) approach—basecall a subset, align to AMR genes, and map back to signal coordinates.
 - **Normalization:** Implemented a vectorized MAD normalization function in `src/utils/normalization.py`.
 
-### Failures (The "Wall of Shame"):
+### FIXES TO DO (The "Wall of Shame"):
 - **Dataset Implementation:** The initial `src/data/dataset.py` was rejected due to:
     - Multiple syntax errors (`panda`, `unsqueze`, `sys.append.path`).
     - Inefficient O(N) indexing of POD5 files during initialization.

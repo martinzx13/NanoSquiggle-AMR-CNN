@@ -1,67 +1,87 @@
 import torch
 from torch.utils.data import Dataset 
-import panda as pd 
+import pandas as pd 
 import pod5
 import numpy as np 
 import random
+from collections import OrderedDict
 import os
 import sys
 
-sys.append.path('../utils/normalization.py')
+sys.path.append('../utils/')
 from normalization import mad_normalization
 
+class Pod5ReaderCache:
+    """ 
+    An Least recently used method, to ensure that the system will not be overload
+    explicity close file handles.
+    """
+    def __init__(self, max_size=5):
+        self.cache = OrderedDict()
+        self.max_size = max_size
+
+    def get_reader(self, filepath):
+        # Move to the end to show it was recently used.
+        if (filepath in self.cache):
+            self.cache.move_to_end(filepath)
+            return (self.cache[filepath])
+        
+        # If cache is full evit the oldest and close it.
+        if (len(self.cache) > self.max_size):
+            oldest_filepath, oldest_reader = self.cache.popitem(last=False)
+            oldest_reader.close()
+        
+        new_reader = pod5.Reader(filepath)
+        self.cache[filepath] = new_reader
+        return (new_reader)
+    
+    def close_all(self):
+        for reader in self.cache.values():
+            reader.close()
+        self.cache.clear()
+
 class SquiggleDataset(Dataset):
-    def __init__(self, pod5_dir, labels_csv, window_size=3000, is_training=True):
+    def __init__(self, master_csv_path, window_size=3000, is_training=True):
         """
             Phase 1.
-            Architechture and indexing.
+            Architechture and indexing, Using a master_csv_path, that will conain 
+            read_id, filepath, label.
         """
         self.window_size = window_size
         self.is_training = is_training
 
-        # Dictionary to hold the first handles
-        self._open_readers = {}
+        print(f"Loading the precomputed index from {master_csv_path}")
 
         # The labeling df = panda object.
-        df = pd.read_csv(labels_csv)
-        labels_dict = dict(zip(df['read_id'], df['label']))
+        self.df = pd.read_csv(master_csv_path)
 
-        self.index_map = []
-
-        # Build the spatial map to the data.
-        print("Scanning pod5 files and mapping logical indices to physical address")
-
-        for filename in os.listdir(pod5_dir):
-            if (filename.endswith(".pod5")):
-                filepath = os.path.join(pod5_dir, filename)
-
-                # Scan the metadata.
-                with pod5.Reader(filepath) as reader:
-                    for read_id in reader.read_ids:
-                        if (read_id in labels_dict):
-                            label = labels_dict[read_id]
-                            self.index_map.append(filepath, read_id, label)
-        print(f"Dataset Compiled : {len(self.index_map)} valid label reads.")
+        self.reader_cache = None
 
     def __len__(self):
-        return(len(self.index_map))
+        return(len(self.df))
+
     def _mad_normalize(self, signal_window:np.ndarray) ->np.ndarray:
         return mad_normalization(signal_window)
-    def __getitem(self, idx):
+
+    def __getitem__(self, idx):
         """
             Phase 2 : The Loader & Geometry Engine.
         """
-        filepath, read_id, label = self.index_map[idx]
+        # Initialize cache.
+        if self.reader_cache is None:
+            self.reader_cache = Pod5ReaderCache(max_size=5)
 
-        # ___ Context management. 
-        if filepath not in self._open_readers:
-            # Is the first time seeing the file.
-            self._open_readers[filepath] = pod5.Reader(filepath)
-        reader = self._open_readers[filepath]
-
-        # Extract the raw signal array numpy.
+        # Extrac metadata.
+        row = self.df.iloc[idx]
+        filepath = row['filepath']
+        read_id  = row['read_id']
+        label    = row['label']
+        
+        reader = self.reader_cache.get_reader(filepath)
         read_record = next(reader.reads([read_id]))
         raw_signal = read_record.signal
+
+        # ___ Context management. 
 
         # B -> Lenght window engine.
         L = len(raw_signal)
@@ -81,15 +101,10 @@ class SquiggleDataset(Dataset):
 
         # C -> Math normalization
         norm_signal = self._mad_normalize(windowed_signal)
-
         # Dimension aligment. 
         # 1D CNN demand (channels, Lenght )
-        x_tensor = torch.tensor(norm_signal, dtype=torch.float32).unsqueze(0)
+        x_tensor = torch.tensor(norm_signal, dtype=torch.float32).unsqueeze(0)
         y_tensor = torch.tensor([label], dtype=torch.float32)
 
         return (x_tensor, y_tensor)
-    def __del__(self):
-        # Garbahe Collector, and clossing all open files.
-        for reader in self._open_readers.values():
-            reader.close()
-        
+
