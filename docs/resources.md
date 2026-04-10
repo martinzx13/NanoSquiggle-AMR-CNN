@@ -26,6 +26,7 @@ Mastery of this project requires an understanding of how raw electrical signals 
 *   **PRJEB41335 (SquiggleNet Data):** A large-scale repository of raw Nanopore signals (.fast5) used in the SquiggleNet study. Essential for pre-training.
 *   **PRJNA494801 (ONT Bacterial AMR):** A dataset of multi-drug resistant bacterial genomes sequenced on MinION, providing the ground truth AMR labels you need.
 *   **Zibra Project (Real-time Outbreak Surveillance):** High-quality datasets for testing real-time diagnostic models in clinical settings.
+*   Sqidbase : https://squidbase.org/ a database that contains raw nanopore signals.
 
 ## 3. Technical Tools & Libraries (The Workbench)
 
@@ -38,4 +39,4 @@ Mastery of this project requires an understanding of how raw electrical signals 
 ## 4. Mathematics for Signal Processing
 
 *   **The Fast Fourier Transform (FFT):** While 1D-CNNs operate in the time domain, frequency domain features (Power Spectral Density) can be critical for signal denoising.
-*   **Dynamic Time Warping (DTW):** The classical method for aligning two signals of varying speeds. Your CNN should ideally learn to be invariant to the speed fluctuations (400-450 bps) that DTW handles manually.
+*   **Dynamic Time Warping (DTW):** The classical method for aligning two signals of varying speeds.   Your CNN should ideally learn to be invariant to the speed fluctuations (400-450 bps) that DTW handles manually.

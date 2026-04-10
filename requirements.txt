@@ -11,3 +11,5 @@ pyslow5
 ## Nanopore Signaling
 ont-fast5-api
 pod5
+## Dorado basecaller. 
+Dorado>=1.4.0
