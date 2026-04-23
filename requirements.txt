@@ -7,9 +7,10 @@ matplotlib>=3.7.0
 scipy
 pandas
 pyslow5
+pysam
 
 ## Nanopore Signaling
 ont-fast5-api
 pod5
-## Dorado basecaller. 
+## Dorado basecaller.
 Dorado>=1.4.0

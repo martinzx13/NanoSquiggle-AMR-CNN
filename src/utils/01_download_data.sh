@@ -16,7 +16,6 @@ mkdir -p bin data/raw data/processed configs docs notebooks scripts tests
 
 if [ ! -f "bin/dorado" ]; then
     echo "⬇️ Downloading Dorado..."
-    # He actualizado el link a una versión real de Linux (0.5.0) para asegurar que funcione.
     curl -L "https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.5.0-linux-x64.tar.gz" -o dorado.tar.gz
     tar -xzf dorado.tar.gz
     echo "📦 Organizando Dorado en bin/..."
@@ -24,6 +23,7 @@ if [ ! -f "bin/dorado" ]; then
     mv dorado-0.5.0-linux-x64/bin/dorado bin/
     mv dorado-0.5.0-linux-x64/lib bin/
 
+    # Clean files.
     echo "✅ Dorado instalado en bin/"
     rm -rf dorado-0.5.0-linux-x64 dorado.tar.gz
     echo "✅ Dorado installed in bin/"
@@ -37,7 +37,7 @@ DATA_URL="https://data.narodni-repozitar.cz/general/datasets/dj8ys-a4r49/files/$
 RAW_DATA_DIR="data/raw/${ESTIRPE}"
 
 if [ ! -d "$RAW_DATA_DIR" ]; then
-    echo "⬇️  Descarregando ${ESTIRPE} (1.5GB) ..."
+    echo "⬇️  Descarregando ${ESTIRPE} (...GB) ..."
     mkdir -p "$RAW_DATA_DIR"
     wget -q --show-progress -O data/raw/${ESTIRPE}.tar.gz "$DATA_URL"
 
@@ -46,7 +46,6 @@ if [ ! -d "$RAW_DATA_DIR" ]; then
     tar -xzf data/raw/${ESTIRPE}.tar.gz -C "$RAW_DATA_DIR"
     rm data/raw/${ESTIRPE}.tar.gz
 
-    # 5. Renomeação Padronizada (${ESTIRPE}_01, 02...)
     # Movemos los archivos de la carpeta extraída a la raíz de RAW_DATA_DIR
     if [ -d "$RAW_DATA_DIR/pod5_pass" ]; then
         mv "$RAW_DATA_DIR/pod5_pass"/* "$RAW_DATA_DIR/"
