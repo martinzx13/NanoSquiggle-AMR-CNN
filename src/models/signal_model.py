@@ -31,7 +31,7 @@ class Simple1DCNN(nn.Module):
             nn.Linear(self.flattened_dim, 64),
             nn.ReLU(),
             nn.Dropout(p=0.5), # REGULARIZATION: Prevent overfitting
-            nn.Linear(64, 1)    # Output logit for Binary Classification
+            nn.Linear(64, 4)    # Output logits for Multiclass (1 Background + 3 Genes)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
