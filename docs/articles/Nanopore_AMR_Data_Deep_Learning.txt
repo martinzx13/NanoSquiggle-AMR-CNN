@@ -1,0 +1,200 @@
+﻿Advanced Computational Frameworks for Squiggle-Space Antimicrobial Resistance Detection: A Comprehensive Analysis of Raw Nanopore Signal Architectures, Training Repositories, and Deep Learning Pipelines
+The Paradigm Shift in Genomic Diagnostics and the Emergence of Signal-Space Analysis
+The global healthcare landscape is currently confronting an unprecedented crisis in the form of antimicrobial resistance (AMR), a phenomenon characterized by the evolutionary adaptation of pathogenic microorganisms to survive exposure to antimicrobial agents. Projections by international financial and health organizations suggest that the economic burden of AMR could exceed US$ 1 trillion in additional healthcare expenditures by the year 2050, with global gross domestic product losses estimated between US$ 1 trillion and US$ 3.4 trillion per year as early as 2030.1 In this context, the rapid and accurate identification of antibiotic resistance genes (ARGs) is not merely a clinical necessity but a critical component of global biosurveillance. Traditional diagnostic methodologies, which rely on culturing isolates followed by phenotypic antimicrobial sensitivity testing (AST), are inherently constrained by the biological growth rates of the organisms, often requiring several days to provide actionable results.3 This temporal lag forces clinicians to rely on empirical treatment with broad-spectrum antibiotics, a practice that further drives the selection of resistant strains and increases the risk of treatment failure.2
+The advent of third-generation sequencing (TGS) technologies, pioneered by Oxford Nanopore Technologies (ONT), has introduced a transformative capability: the ability to observe and record biological molecules in real-time as they translocate through a protein nanopore.2 Unlike second-generation sequencing platforms that rely on the optical detection of fluorescently labeled nucleotides, ONT devices measure the modulation of an ionic current caused by a DNA or RNA strand passing through a synthetic membrane.5 This raw current data, colloquially known as "squiggles," serves as a high-fidelity time-series recording of the translocation event.6 Historically, the primary analytical workflow for nanopore data has been centered on basecalling, a computationally intensive process where deep learning models translate electrical fluctuations into a nucleotide sequence.4 However, recent research indicates that basecalling creates a significant bottleneck, introducing latency and potentially losing subtle signal information related to base modifications and complex genomic features.2
+Current research initiatives are increasingly focusing on bypassing the basecalling step entirely, opting instead for direct signal-space classification. This "basecalling-free" approach utilizes sophisticated deep learning architectures, such as Convolutional Neural Networks (CNNs) and transformers, to recognize patterns of antimicrobial resistance directly within the raw electrical signal.2 By operating in signal-space, these models can achieve real-time resistome profiling, providing insights into a pathogen's resistance profile within seconds of the start of a sequencing run.2 This capability is particularly vital for detecting ARGs that are located on mobile genetic elements or plasmids, which are often difficult to assemble or resolve using traditional short-read sequencing.11
+Biophysical Foundations of Nanopore Signal Acquisition and Information Density
+The generation of raw nanopore signals is a complex biophysical process governed by the interaction between the translocation speed of the DNA molecule, the geometry of the protein pore, and the ionic environment of the flow cell.5 As a single-stranded DNA molecule is pulled through the pore by a motor protein, it displaces ions, causing a measurable drop in the current.2 The magnitude of this current drop is determined by the specific k-mer (a sequence of    nucleotides) currently residing within the sensing region of the pore.2 Because multiple nucleotides contribute to the signal simultaneously, the resulting squiggle is a dense, high-dimensional representation of the underlying genomic sequence, enriched with information about DNA modifications such as methylation.6
+The information density of these signals is substantially higher than that of basecalled FASTQ files. While a FASTQ file provides a discrete representation of the most likely nucleotide sequence, the raw signal contains the continuous variability of the electrical current, capturing translocation dynamics and subtle chemical interactions that basecallers may average out or misinterpret.6 This richness is why raw signal data is increasingly viewed as a "treasure trove" for the development of advanced diagnostic algorithms.6 To support these developments, the community has moved toward standardized raw data formats, each designed to optimize different aspects of the sequencing and analysis workflow.
+
+
+Data Format
+	Technical Basis
+	Primary Use Case
+	Advantage for Deep Learning
+	FAST5
+	HDF5-based container
+	Legacy raw data storage
+	Comprehensive metadata integration 15
+	POD5
+	Proprietary ONT format
+	Modern raw data storage
+	Optimized for high-throughput streaming and Dorado 15
+	SLOW5
+	Custom binary format
+	High-performance signal analysis
+	Parallelized CPU/GPU access and fast indexing 16
+	BLOW5
+	Binary version of SLOW5
+	Storage-efficient signal analysis
+	Lossless compression and remote read fetching 16
+	The transition from FAST5 to POD5 represents a significant shift in ONT’s software ecosystem, reflecting the need for formats that can keep pace with the massive data yields of the PromethION and GridION platforms.2 For researchers developing CNN-based models, the ability to convert between these formats and perform efficient data augmentation is a prerequisite for successful model training.17
+Deep Learning Architectures for Raw Signal Classification
+The task of recognizing AMR patterns in raw signals is essentially a time-series classification problem. The high frequency of sampling (typically    for    flow cells) results in signals with significant length and complexity, necessitating architectures that can learn both local features and long-range dependencies.4 Convolutional Neural Networks (CNNs) have emerged as the foundational layer for most signal-space models due to their inherent ability to act as automated feature extractors for time-domain data.9
+One-Dimensional Convolutional Architectures and Residual Learning
+The application of 1D convolutions allows a model to slide filters across the raw current signal, identifying local patterns that correspond to specific k-mers or chemical motifs.19 Pioneering models such as SquiggleNet utilize residual blocks (ResNet) to facilitate the training of deeper networks without the risk of vanishing gradients.20 SquiggleNet’s architecture is characterized by its use of bottleneck residual units that progressively increase the number of filters while performing spatial reduction through average pooling.20 This approach allows the model to classify a read’s origin (e.g., human vs. bacterial) within the first few thousand signals of a translocation event.10
+Beyond simple classification, CNNs are also being deployed for complex demultiplexing tasks. Deepbinner, for example, uses a deep CNN to identify barcode signals directly in signal-space, achieving higher accuracy than base-space tools like Porechop because it avoids the noise introduced during the basecalling of barcodes.19 This signal-level accuracy is critical for clinical metagenomics, where the correct assignment of a single read can be the difference between a correct and incorrect pathogen identification.7
+Hybrid Architectures: Integrating Transformers and Recurrent Units
+While CNNs are efficient for local feature detection, the detection of specific antibiotic resistance genes often requires understanding the broader genomic context. This has led to the development of hybrid models like NanoResFormer, which integrates a CNN-based feature extractor with a transformer encoder.2 The CNN component serves to downsample the raw signal and extract local k-mer representations, while the transformer block utilizes self-attention mechanisms to model long-range relationships across the signal.4
+In the NanoResFormer architecture, three variants have been evaluated to determine the optimal balance between computational efficiency and diagnostic sensitivity.
+
+
+Model Variant
+	Feature Depth
+	Sub-sampling Factor
+	Target Application
+	Performance (Sensitivity/Precision)
+	Low
+	8
+	64x
+	Ultra-fast screening
+	  
+ 4
+	Middle
+	64
+	64x
+	Standard clinical profiling
+	  
+ 4
+	High
+	128
+	16x
+	High-resolution research
+	  
+ 4
+	The NanoResFormer model demonstrates that a hybrid approach can achieve nearly    sensitivity in detecting ARGs like blaSHV and OqxB without the need for a prior basecalling step.2 Similarly, NanoGeneNet utilizes a hybrid convolutional-recurrent (LSTM) architecture to localize and classify housekeeping genes used in multilocus sequence typing (MLST), proving that signal-space analysis can reach the level of granularity required for bacterial strain differentiation.2
+Repositories for Raw Nanopore Signal Data and AMR Ground Truth
+A critical requirement for training any deep learning model is the availability of high-quality, labeled datasets. For AMR pattern recognition, this requires datasets that link raw nanopore signals (FAST5 or POD5) with validated resistance phenotypes or high-contiguity reference assemblies.3
+The PRJNA1091452 Multi-Center Study Dataset
+One of the most significant resources for the AMR research community is the raw signal dataset associated with the multi-center study on bacterial whole-genome genotyping.6 This dataset is unique in its scale and the rigor of its metadata, providing a benchmark for the reproducibility of signal-level analysis across different laboratories.6
+
+
+Metadata Category
+	Dataset Details
+	Significance for ML Training
+	SRA Accession
+	PRJNA1091452
+	Centralized access to    of signal data 6
+	Bacterial Species
+	79 isolates across 6 species
+	Diverse training targets including E. faecium and K. pneumoniae 6
+	Sequencing Chemistry
+	R10.4.1 flow cells, V14 chemistry
+	Training on the latest high-accuracy signal standards 6
+	AST Phenotypes
+	Phenotypic data for Kp, Ef, Sa
+	Gold standard for supervised learning of resistance patterns 6
+	Replication
+	12 triplicates from 3 labs
+	Assessment of model robustness to lab-specific signal noise 6
+	The presence of phenotypic AST data (conducted via VITEK 2 XL instruments) alongside the raw signals allows for the training of models that move beyond genotype-to-phenotype prediction, potentially uncovering signal motifs that correlate with specific resistance levels (MICs) or non-canonical resistance mechanisms.6
+The Brno University of Technology NanoResFormer Dataset
+Researchers specifically interested in the detection of resistance genes in Klebsiella pneumoniae can access the curated dataset used to develop the NanoResFormer model.2
+* Repository Information: Czech National Repository via DOI 10.48700/datst.dj8ys-a4r49.2
+* Data Volume: 26,956 curated nanopore signals containing target ARGs.2
+* Target ARGs: Includes genes conferring resistance to   -lactams (blaSHV, blaOXA), aminoglycosides (aac, aph), quinolones (OqxA, OqxB), tetracyclines (tetA, tetD), and fosfomycin (fosA).2
+* Isolate Source: 61 clinical isolates from 13 different hospital departments, ensuring high genetic diversity within the target species.2
+This dataset is particularly useful for training models designed to localize ARGs within a longer read, as the training signals have been carefully segmented and labeled using the NANOSLAST tool.2
+Additional Public Repositories and Data Sources
+While the SRA and ENA are the primary long-term archives, the research community frequently uses Zenodo and Figshare to share raw signal data that may be too large or specialized for standard databases.6
+   * Zenodo Repository 14829537: Contains raw POD5 sequencing data from plasmid DNA samples, providing a clean training environment for detecting plasmid-mediated information.26
+   * HeLa&Zymo Dataset: A widely used benchmark for species classification models like SquiggleNet. It contains a mixture of human (HeLa) DNA and eight bacterial species from the Zymo community standard, allowing models to learn the difference between host and pathogen signals in a metagenomic context.20
+   * PubMLST and Enterobase: These databases host curated genomic datasets that integrate population sequence data with source and phenotype information, serving as a vital source for cross-referencing signal data with established AMR markers.27
+Computational Pipelines for Training and Implementation
+The training of a CNN or hybrid model for raw signal analysis requires a specialized bioinformatic pipeline that bridges the gap between the electrical signal and the biological ground truth. This process involves multiple stages, from data conversion to hyperparameter optimization.4
+Raw Signal Preprocessing and Normalization
+The first step in any training pipeline is the standardization of the raw data. Raw current measurements can vary between flow cells and even between individual pores due to variations in manufacturing and environmental conditions.2
+   1. Normalization: Most models use Median Absolute Deviation (MAD) normalization or Z-score normalization to scale the signal to a consistent range.10
+   2. Conversion: Tools like pod5 convert fast5 or slow5tools f2s are used to bring legacy data into modern, efficient formats for parallelized training.16
+   3. Signal Indexing: The use of slow5tools index and slow5curl enables the training pipeline to fetch specific reads or signal segments from a large dataset without loading the entire archive into memory, which is essential for working with TB-scale datasets like PRJNA1091452.16
+Ground Truth Generation via Signal-to-Reference Remapping
+Supervised training of an AMR detection model requires a precisely labeled signal. The standard method for labeling involves:
+   1. Super-Accuracy Basecalling: Using Dorado or Guppy with the "SUP" (super-accurate) model to generate the most reliable nucleotide sequence possible from the raw signal.3
+   2. Assembly and Database Screening: Assembling the reads with Flye and using ABRicate or AMRFinderPlus to identify the exact coordinates of ARGs on the assembled genome.11
+   3. Remapping with Taiyaki: The Taiyaki training suite, developed by ONT, is used to map the raw signal points back to the reference sequence.14 This remapping creates a ground truth file where each signal sample is associated with a specific k-mer or genomic feature.4
+Model Training and Optimization Strategies
+The training process itself is typically implemented in PyTorch or TensorFlow, leveraging GPU acceleration to handle the high dimensionality of the data.4
+
+
+Training Parameter
+	NanoResFormer Configuration
+	Purpose
+	Framework
+	Python 3.12 / PyTorch v2.8
+	Modern, flexible deep learning environment 4
+	Optimization
+	ADAM (  )
+	Stable convergence in high-dimensional spaces 4
+	Loss Function
+	Cross-Entropy
+	Standard for multi-class gene detection 4
+	Bayesian Opt.
+	20 iterations, 5 initial points
+	Automated tuning of LR, Batch Size, and Dropout 4
+	Epochs
+	250
+	Ensures sufficient time for pattern recognition 4
+	Cross-Validation
+	5-fold
+	Assessing robustness across data subsets 4
+	During training, data augmentation is often used to improve the model's robustness. This can include adding Gaussian noise to the signal or performing temporal distortions (stretching or compressing the signal) to account for variations in DNA translocation speed through the pore.19
+Clinical Application and Real-Time Surveillance Pipelines
+The ultimate goal of training these models is their integration into clinical and public health workflows. Several pipelines have been developed that combine signal-space analysis with traditional bioinformatics to provide comprehensive AMR surveillance.
+Integrated AMR Prediction Workflows
+The nataliering/nanopore_AMR_tools repository provides a benchmarked pipeline for comparing the performance of different AMR prediction strategies.17 This pipeline highlights that while basecalling accuracy (Fast vs. SUP) does not significantly impact overall AMR prediction accuracy, the assembly strategy and the volume of data available are critical factors.3 For researchers, this suggests that high-depth signal data is more important for accurate resistance profiling than the specific accuracy mode of the basecaller used for ground truth labeling.3
+For specific pathogens, the wf-tb-amr workflow provides a production-ready system for Mycobacterium tuberculosis.29 This pipeline uses Nextflow to manage the execution of variant calling and resistance prediction, ensuring reproducibility across different environments.29 Similarly, the PiMA (v2) pipeline, despite its transition toward basecalled FASTQ inputs, remains a standard for the analysis of bacterial pathogens in public health laboratories.28
+Adaptive Sampling and Read-Until Strategies
+The most innovative application of signal-space CNNs is in "adaptive sampling" or "read-until".2 In this paradigm, the sequencing device streams the initial signal of each read to a classification model like SquiggleNet or RawMap.2 If the model identifies the read as being of interest (e.g., containing a specific resistance marker or belonging to a target pathogen), the read is sequenced to completion.10 If the read is classified as non-target (e.g., host DNA or common environmental contaminants), the model sends a command to the device to reverse the pore voltage and eject the molecule.10 This process allows for the enrichment of target sequences by a factor of 5-10x without any laboratory-based target enrichment, significantly increasing the sensitivity of metagenomic AMR detection.10
+The Role of DNA Modifications in AMR Signal Pattern Recognition
+A nuanced understanding of AMR requires more than just identifying the presence of a gene; it requires an assessment of how that gene is regulated and whether it is expressed. Nanopore sequencing is uniquely capable of detecting DNA modifications, such as N6-methyladenosine (6mA) and 5-methylcytosine (5mC), which play crucial roles in bacterial gene regulation and the horizontal transfer of resistance genes.6
+The raw electrical signal contains characteristic perturbations caused by methylated bases.6 Deep learning models can be trained to recognize these "methylation squiggles," allowing for the simultaneous determination of genotype and epigenotype.6 The PRJNA1091452 dataset is again foundational here, as it includes replicates that demonstrate the reproducibility of methylation detection across different flow cells and laboratories.6 Researchers are currently using this data to develop modular pipelines (e.g., using the Nanopore Modkit tool and Nextflow) to streamline the detection of methylated motifs that may correlate with increased virulence or resistance.31
+Future Directions in Squiggle-Space Machine Learning
+The field of raw signal analysis is rapidly evolving, with several emerging trends likely to define the next generation of AMR diagnostics.
+Toward Foundation Models for Nanopore Signals
+As the volume of publicly available raw signal data continues to grow—reaching petabytes across repositories like the ENA and SRA—there is an opportunity to develop "foundation models" for nanopore squiggles. Similar to how large language models (LLMs) are pre-trained on vast text corpora, signal-space models could be pre-trained on millions of unlabeled reads to learn the universal language of nanopore translocation.1 These pre-trained encoders could then be fine-tuned on smaller, highly curated datasets for specific AMR detection tasks, significantly reducing the data requirements for new projects.
+Decentralized and Edge Computing for Diagnostics
+The portability of the MinION and MinION Mk1D devices makes them ideal for use in resource-limited settings.15 However, the computational demands of deep learning models for signal analysis often require high-end GPUs.8 Future research is focusing on the development of "lite" CNN architectures and hardware-aware quantization techniques that would allow these models to run on mobile devices or edge computing units integrated directly into the sequencer.10
+Multi-Omics Integration in Signal Space
+Direct RNA sequencing (DRS) on nanopore platforms allows for the simultaneous analysis of the transcriptome and the epitranscriptome.5 By applying signal-space DL models to DRS data, it may be possible to detect not just the presence of an AMR gene in the genome, but its activity in the transcriptome, providing a more direct link to the phenotypic resistance of the pathogen.2
+Summary and Practical Recommendations for Project Implementation
+For the successful training of a deep learning model for AMR pattern recognition using raw nanopore signals, several key steps and resources must be prioritized.
+   1. Data Acquisition: Utilize the PRJNA1091452 dataset on the NCBI SRA for large-scale, multi-center training, and the 10.48700/datst.dj8ys-a4r49 dataset for specialized K. pneumoniae ARG detection.2
+   2. Format Selection: Standardize on the POD5 format for raw data management to ensure compatibility with modern basecallers and training tools like Dorado and Taiyaki.14
+   3. Architecture Choice: Implement a hybrid CNN-Transformer architecture (e.g., following the NanoResFormer design) to balance local feature extraction with the global context required for gene identification.2
+   4. Pipeline Integration: Use the Taiyaki suite for signal-to-reference remapping and the slow5tools ecosystem for high-performance data access and remote read fetching.14
+   5. Ground Truth Validation: Ensure that training labels are generated using the Super-Accuracy (SUP) basecalling models and validated against established AMR databases like CARD and ResFinder.3
+By adopting these advanced computational strategies and leveraging the expanding ecosystem of raw signal repositories, the scientific community can move closer to a new era of real-time, precision diagnostics for infectious diseases. The ability to decode the electrical language of nanopores directly will not only enhance our response to the AMR crisis but also fundamentally change our understanding of the microbial world.
+Fuentes citadas
+   1. Integrating artificial intelligence with genome sequencing against antimicrobial resistance: a narrative review - Frontiers, acceso: abril 17, 2026, https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2026.1757161/full
+   2. Basecalling-free resistance gene identification using a hybrid transformer in raw nanopore signals - PMC, acceso: abril 17, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12957220/
+   3. A systematic comparison of tools for predicting antimicrobial resistance from nanopore sequence data | bioRxiv, acceso: abril 17, 2026, https://www.biorxiv.org/content/10.64898/2026.04.06.716670v1.full-text
+   4. Basecalling-free resistance gene identification using a hybrid transformer in raw nanopore signals - ResearchGate, acceso: abril 17, 2026, https://www.researchgate.net/publication/400912110_Basecalling-free_resistance_gene_identification_using_a_hybrid_transformer_in_raw_nanopore_signals
+   5. Nanopore direct RNA sequencing for RNA modification analysis: workflow assessment and computational tool benchmarking - PMC, acceso: abril 17, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12976157/
+   6. A whole-genome sequencing dataset of nanopore raw signals for bacterial genotyping and methylation analysis - PMC, acceso: abril 17, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12675498/
+   7. (PDF) Performance of neural network basecalling tools for Oxford Nanopore sequencing, acceso: abril 17, 2026, https://www.researchgate.net/publication/333985694_Performance_of_neural_network_basecalling_tools_for_Oxford_Nanopore_sequencing
+   8. Basecalling-free resistance gene identification using a ... - Frontiers, acceso: abril 17, 2026, https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2026.1748934/full
+   9. Integrating artificial intelligence with genome sequencing against antimicrobial resistance: a narrative review - Semantic Scholar, acceso: abril 17, 2026, https://pdfs.semanticscholar.org/466b/de94ba76b2d6d40deebe59f4f02c294e6790.pdf
+   10. SquiggleNet: real-time, direct classification of nanopore signals - PMC - NIH, acceso: abril 17, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC8548853/
+   11. Tackling global pathogen threats with nanopore sequencing data, acceso: abril 17, 2026, https://www.db-thueringen.de/servlets/MCRFileNodeServlet/dbt_derivate_00069784/Dissertation_SebastianKrautwurst.pdf
+   12. (PDF) Comparing Long-Read Assemblers to Explore the Potential of a Sustainable Low-Cost, Low-Infrastructure Approach to Sequence Antimicrobial Resistant Bacteria With Oxford Nanopore Sequencing - ResearchGate, acceso: abril 17, 2026, https://www.researchgate.net/publication/358989156_Comparing_Long-Read_Assemblers_to_Explore_the_Potential_of_a_Sustainable_Low-Cost_Low-Infrastructure_Approach_to_Sequence_Antimicrobial_Resistant_Bacteria_With_Oxford_Nanopore_Sequencing
+   13. Applications of Genome Sequencing in Infectious Diseases: From Pathogen Identification to Precision Medicine - PMC, acceso: abril 17, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12655035/
+   14. GitHub - nanoporetech/taiyaki: Training models for basecalling Oxford Nanopore reads, acceso: abril 17, 2026, https://github.com/nanoporetech/taiyaki
+   15. A Streamlined Hardware–Software Workflow for Real-Time Nanopore Sequencing on a GPU-Integrated Workstation - MDPI, acceso: abril 17, 2026, https://www.mdpi.com/2813-6640/4/1/5
+   16. (PDF) Flexible and efficient handling of nanopore sequencing signal data with slow5tools, acceso: abril 17, 2026, https://www.researchgate.net/publication/369854923_Flexible_and_efficient_handling_of_nanopore_sequencing_signal_data_with_slow5tools
+   17. nataliering/nanopore_AMR_tools · GitHub - GitHub, acceso: abril 17, 2026, https://github.com/nataliering/nanopore_AMR_tools/
+   18. Streamlining remote nanopore data access with slow5curl - PMC - NIH, acceso: abril 17, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC11010652/
+   19. Deepbinner: Demultiplexing barcoded Oxford Nanopore reads with deep convolutional neural networks - ResearchGate, acceso: abril 17, 2026, https://www.researchgate.net/publication/329080278_Deepbinner_Demultiplexing_barcoded_Oxford_Nanopore_reads_with_deep_convolutional_neural_networks
+   20. (PDF) SquiggleNet: real-time, direct classification of nanopore signals - ResearchGate, acceso: abril 17, 2026, https://www.researchgate.net/publication/355699407_SquiggleNet_real-time_direct_classification_of_nanopore_signals
+   21. Real-Time, Direct Classification of Nanopore Signals with SquiggleNet | bioRxiv, acceso: abril 17, 2026, https://www.biorxiv.org/content/10.1101/2021.01.15.426907.full
+   22. Real-Time, Direct Classification of Nanopore Signals with SquiggleNet | bioRxiv, acceso: abril 17, 2026, https://www.biorxiv.org/content/10.1101/2021.01.15.426907v1.full
+   23. Using deep learning for gene detection and classification in raw nanopore signals - PMC, acceso: abril 17, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC9520528/
+   24. (PDF) A whole-genome sequencing dataset of nanopore raw signals for bacterial genotyping and methylation analysis - ResearchGate, acceso: abril 17, 2026, https://www.researchgate.net/publication/398247431_A_whole-genome_sequencing_dataset_of_nanopore_raw_signals_for_bacterial_genotyping_and_methylation_analysis
+   25. How to get Nanopore MinION fast5 from SRA - Bioinformatics Stack Exchange, acceso: abril 17, 2026, https://bioinformatics.stackexchange.com/questions/2943/how-to-get-nanopore-minion-fast5-from-sra
+   26. Raw nanopore sequencing data (pod5) - Zenodo, acceso: abril 17, 2026, https://zenodo.org/records/14829537
+   27. Download - FSA Research and Evidence, acceso: abril 17, 2026, https://science.food.gov.uk/article/123918-path-safe-phase-1-evaluation-report/attachment/248440.docx
+   28. appliedbinf/pima: Plasmid and antimicrobial resistance pipeline - GitHub, acceso: abril 17, 2026, https://github.com/appliedbinf/pima
+   29. wf-tb-amr - Oxford Nanopore Technologies, acceso: abril 17, 2026, https://nanoporetech.com/document/epi2me-workflows/wf-tb-amr
+   30. Resources: Documentation | Oxford Nanopore Technologies, acceso: abril 17, 2026, https://nanoporetech.com/es/documentation/results?category=analyse
+   31. Decoding bacterial methylomes in four public health-relevant microbial species: nanopore sequencing enables reproducible analysis of DNA modifications - ResearchGate, acceso: abril 17, 2026, https://www.researchgate.net/publication/391053136_Decoding_bacterial_methylomes_in_four_public_health-relevant_microbial_species_nanopore_sequencing_enables_reproducible_analysis_of_DNA_modifications
+   32. Bacterial Systematic Genetics and Integrated Multi-Omics: Beyond Static Genomics Toward Predictive Models - MDPI, acceso: abril 17, 2026, https://www.mdpi.com/1422-0067/26/19/9326
+   33. Resource centre - Oxford Nanopore Technologies, acceso: abril 17, 2026, https://nanoporetech.com/resource-centre
