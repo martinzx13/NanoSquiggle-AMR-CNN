@@ -26,5 +26,17 @@ class MambaCNN(nn.Module):
       nn.BatchNorm1d(d_model),
       nn.ReLU()
   )
-    #TODO Implement State Space Model.
-    # TODO Final Classifier.
+    
+    # Global pooling para garantir que o tamanho independentemente do input
+    self.pool = nn.AdaptiveAvgPool1d(1)
+    
+    # Classificador Final para 4 Classes
+    self.classifier = nn.Linear(d_model, num_classes)
+
+  def forward(self, x: torch.Tensor) -> torch.Tensor:
+      if x.dim() == 2:
+          x = x.unsqueeze(1)
+      x = self.encoder(x)
+      x = self.pool(x).squeeze(-1) # Remove a última dimensão extra
+      x = self.classifier(x)
+      return x
