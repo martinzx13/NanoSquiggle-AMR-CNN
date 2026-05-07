@@ -42,19 +42,19 @@ def run_test_with_dummy_data():
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
 
     # --- 4. Instanciação e Treino do Modelo (O teu Script 3 em ação) ---
-    print("🧠 Instanciando o modelo Simple1DCNN...")
+    print(" Instanciando o modelo Simple1DCNN...")
     model = Simple1DCNN(sequence_length=SEQUENCE_LENGTH)
 
-    print(f"\n🔥 Iniciando treino por {EPOCHS} épocas...")
+    print(f"\n Iniciando treino por {EPOCHS} épocas...")
     train_losses, val_losses = train_model(model, train_loader, val_loader, epochs=EPOCHS)
 
-    print("\n📈 Gerando gráfico de Loss...")
+    print("\n Gerando gráfico de Loss...")
     plot_loss_curve(train_losses, val_losses)
 
-    print("\n🧪 Avaliando o modelo no conjunto de teste falso...")
+    print("\n Avaliando o modelo no conjunto de teste falso...")
     evaluate_metrics(model, test_loader)
 
-    print("\n--- ✅ TESTE CONCLUÍDO COM SUCESSO! ---")
+    print("\n--- TESTE CONCLUÍDO COM SUCESSO! ---")
 
 if __name__ == '__main__':
     run_test_with_dummy_data()

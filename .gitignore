@@ -4,4 +4,4 @@
 bin
 data/processed/*/aligned_reads.sam
 data/processed/*/aligned_reads.bam
-data/processed/*/aligned_reads.bam.bai
+data/processed/*/aligned_reads.bam.baidorado/
